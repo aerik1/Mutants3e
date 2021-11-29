@@ -1,0 +1,231 @@
+!scriptcard {{ 
++++M&M3E+++
+--#sourceToken|CharacterID
+--&AttackPower|PowerName
+--&CombatSpecialty|AttackSpeciality
+
+  --Lsettings|[*S:character_name]
+  --?[*S:op_npc] -eq on|>NPCSettings
+  --=k|0
+  --=NumberOfTargets|0
+  
+  --:FindCombatSkill|
+	  --Rfind|[*S:character_id];[&CombatSpecialty];repeating_closecombat;specialty
+	  --?"[*R:specialty]" -inc Loaded|[
+		--=CombatSkill|0
+		--=SkillRank|0
+		--]|[
+		--=CombatSkill|[*R:specialty_rank]
+		--=SkillRank|[*R:specialty_rank]
+		--]|
+		
+  --:FindImprovedCrit|Character ID;Attack Name
+    --=CritRange|20
+	--Rfirst|[*S:character_id];repeating_advantages
+	--:ImpCritLoop|
+		--?"[*R:name]" -inc Loaded|LoopDone
+		--?"[*R:name]" -inc "Improved Critical" -and "[*R:name]" -inc "[&AttackPower]"|HowMuchImpCrit
+		--Rnext|
+		--^ImpCritLoop|
+	--:HowMuchImpCrit|
+		--~Before|string;before;:;[*R:name]
+		--~After|string;after;critical ;[&Before]
+		--=ImpCritValue|[&After]
+		--=CritRange|20 - [$ImpCritValue]
+	--:LoopDone|
+
+  --:FindAttackRank|
+	--Rfind|[*S:character_id];(P,C) [&AttackPower];repeating_attacks;attack_name
+	--=PowerRank|[*R:rank_total]
+
+  --:StartAttackRollConstruction|
+	--=AttackRoll|1d20 [Base] + [*S:fighting] [FGT] + [$CombatSkill] [Skill]
+	
+  --:FindAttackAdvantage|Character ID;Attack Name
+	--=CombatAdvantage|0
+	--Rfind|[*S:character_id];Close Attack;repeating_advantages;name
+	--?"[*R:name]" -ninc Loaded|[
+		--=CombatAdvantage|[*R:rank]
+		--=AttackRoll|1d20 [Base] + [*S:fighting] [FGT] + [$CombatSkill] [Skill] + [$CombatAdvantage] [Combat Advantage] 
+		--]|
+		
+  --:BeginPowerAttributes|
+	--Rfind|[*S:character_id];[&AttackPower];repeating_powers;label
+	--?"[*R:label]" -inc Loaded|PowerError
+	--=ResistanceDC|[*R:dc]
+			
+  --:FindMultiAttack|			
+	--?"[*R:description]" -ninc Multiattack|NoMultiattack
+	--IHow are you using ; MultiAttack?|q;MultiUse; How are you using Multiattack?|Single Target|Multiple Targets|Covering Attack
+	--?"[&MultiUse]" -eq "Single Target"|[
+		--IWho is your ; target?|t;PowerTarget;Select your attack target
+		--#targetToken|[&PowerTarget]
+		--=WhatToHit|10 + [*T:dodge]
+		--?[$CombatAdvantage] -ne 0|=AttackRoll;1d20 [Base] + [*S:fighting] [FGT] + [$CombatSkill] [Skill] + [$CombatAdvantage] [Combat Advantage]
+		--=AttackDifference|[$AttackRoll] - [$WhatToHit]
+		--=Degree|[$AttackDifference] \ 5 + 1
+		--?[$Degree] -eq 2|=ResistanceDC;[$ResistanceDC] + 2
+		--?[$Degree] -ge 3|=ResistanceDC;[$ResistanceDC] + 5
+		--^FindTargetImpervious|
+		--]
+	--?"[&MultiUse]" -eq "Multiple Targets"|MultipleTargetAttack
+	--?"[&MultiUse]" -eq "Covering Attack"|CoveringAttack
+	--:NoMultiattack|
+
+  --IWho is your ; target?|t;PowerTarget;Select your attack target
+  --#targetToken|[&PowerTarget]
+  --=WhatToHit|10 + [*T:dodge]
+  --#emoteText|[*S:character_name] attacks [*T:character_name] with their [&AttackPower] attack!
+	
+  --:FindTargetImpervious|
+	--Rfirst|[*T:character_id];repeating_powers
+	--:ImperviousLoop|
+		--?"[*R:label]" -inc Loaded|ImperviousLoopDone
+		--?"[*R:description]" -inc "Impervious"|HowMuchImpervious
+		--Rnext|
+		--^ImperviousLoop|
+	--:HowMuchImpervious|
+		--~ImpRating|string;before;,;[*R:description]
+		--~ImpRating|string;after;Impervious Toughness ;[&ImpRating]
+		--=ImperviousRating|[&ImpRating]
+		--=ImperviousAgainstRank|[$ImperviousRating] / 2 {CEIL}
+	--:ImperviousLoopDone|
+	
+  --:LoadPowerAgain|
+	--Rfind|[*S:character_id];[&AttackPower];repeating_powers;label
+	--?"[*R:label]" -inc Loaded|PowerError
+	--#rightsub|[*R:descriptor]
+  
+  --:SetResistanceCheck|
+	  --=ResistanceCheck|1d20 + [*T:toughness]
+	  --?"[*R:description]" -inc "Alternate Resistance"|[
+		--~Resistance|string;after;Alternate Resistance ;[*R:description]
+		--~Resistance|string;before;,;[&Resistance]
+		--=ResistanceCheck|1d20 + [*T:[&Resistance]]
+		--]|
+  
+  --#title|[*S:character_name] - [*R:label]
+  
+  --:FindPenetratingDamage|
+	--?"[*R:description]" -inc Penetrating|[
+		--~Penetrating|string;after;Penetrating ;[*R:description]
+		--~PenetratingRank|string;before;,;[&Penetrating]
+		--=PenetratingRank|[&PenetratingRank]
+		--]|
+		
+  --:FindAccurate|
+	--?"[*R:description]" -inc Accurate|[
+		--~Accurate|string;after;Accurate ;[*R:description]
+		--~AccurateRank|string;before;,;[&Accurate]
+		--=AccurateRank|[&AccurateRank]
+		--=AccurateBonus|[$AccurateRank] * 2
+		--?[$CombatAdvantage] -ne 0|=AttackRoll;1d20 [Base] + [*S:fighting] [FGT] + [$CombatSkill] [Skill] + [$CombatAdvantage] [Combat Advantage] + [$AccurateBonus] [Accurate]
+		--]|
+		
+  --+Pow!|[*S:character_name] rolls a [$AttackRoll] to attack [*T:character_name] with their [*R:label].
+  
+  --?[$ImperviousAgainstRank] -ge [$PowerRank]|ImperviousToThisAttack|=ResistanceDC;15 + [$PenetratingRank]
+  
+  --:HitDetermination|
+	--?[$AttackRoll.Base] -eq 1 -or [$AttackRoll] -lt [$WhatToHit]|Miss
+	--?[$AttackRoll.Base] -eq 20 -and [$AttackRoll] -ge [$WhatToHit]|Crit|Hit
+	--?[$AttackRoll.Base] -ge [$CritRange] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
+	--?[$AttackRoll] -ge [$WhatToHit]|Hit
+	
+	--:Miss|
+		--+Miss|[i][*T:character_name] avoids the [*R:label]![/i]
+		--?[$k] -eq [$NumberOfTargets]|MultiAttacksDone|ResolveAttacks
+		--X|
+		
+	--:Crit|
+		--IWhat ; additional effect?|q;AddEffect;Choose your additional critical effect|Increased Effect|Added Effect|Alternate Effect
+		--?"[&AddEffect]" -eq "Increased Effect"|=ResistanceCheck;[$ResistanceCheck] - 5
+		--=Difference|[$ResistanceDC] - [$ResistanceCheck]  
+		--?[$Difference] -lt 1|Resisted
+		--=DegreeSuccess|[$Difference] \ 5 + 1
+		-->DamageDegreeResult|
+		--+Critical Hit!| [i] Choose your [&AddEffect] for this critical hit. [/i]
+		--?"[*R:description]" -inc "Secondary Effect"|[
+			--+Secondary Effect|[i][*T:character_name] will have to make another resistance check against this effect next round.[/i]
+			--]|
+		--?[$k] -eq [$NumberOfTargets]|MultiAttacksDone|ResolveAttacks
+		--X|
+  
+	--:Hit|
+		--=Difference|[$ResistanceDC] - [$ResistanceCheck]  
+		--?[$Difference] -lt 1|Resisted
+		--=DegreeSuccess|[$Difference] \ 5 + 1
+		-->DamageDegreeResult|
+		--?"[*R:description]" -inc "Secondary Effect"|[
+			--+Secondary Effect|[i][*T:character_name] will have to make another resistance check against this effect next round.[/i]
+			--]|
+		--?[$k] -eq [$NumberOfTargets]|MultiAttacksDone|ResolveAttacks
+		--X|
+		
+	--:Resisted|
+		--+Resisted!| [i][*T:character_name] has resisted any damage from the [*R:label].[/i]
+		--?[$k] -eq [$NumberOfTargets]|MultiAttacksDone|ResolveAttacks
+		--X|
+		
+	--:DamageDegreeResult|
+		--?[$DegreeSuccess] -eq 1|[
+			--+Failed|[i][*T:character_name] takes a –1 circumstance penalty to further resistance checks against damage.[/i]
+			--@modbattr|_silent _charid [*T:character_id] _injuries|+1
+			--]|
+		--?[$DegreeSuccess] -eq 2|[
+			--+Failed|[i][*T:character_name] takes a –1 circumstance penalty to further resistance checks against damage and is [b]dazed[/b] until the start of their next turn.[/i]
+			--@modbattr|_silent _charid [*T:character_id] _injuries|+1
+			--@setattr|_silent _charid [*T:character_id] _dazed|on
+			--]|
+		--?[$DegreeSuccess] -eq 3|[
+			--?[*T:staggered] -eq on|FourthDegree
+			--+Failed|[i][*T:character_name] takes a –1 circumstance penalty to further resistance checks against damage and is [b]staggered[/b] until they recover.[/i]
+			--@modbattr|_silent _charid [*T:character_id] _injuries|+1
+			--@setattr|_silent _charid [*T:character_id] _staggered|on
+			--]|
+		--:FourthDegree|
+		--?[$DegreeSuccess] -ge 4|[
+			--+Out!|[i][*T:character_name] has been incapacitated![/i]
+			--@setattr|_silent _charid [*T:character_id] _incapacitated|on
+			--]|
+			--<|
+			
+  --:MultipleTargetAttack|
+	--IHow many targets in your ; power arc?|q;TargetsNumber;How many targets in your power arc?|1|2|3|4|5|6|7|8|9|10
+	--=NumberOfTargets|[&TargetsNumber]
+	--=i|1
+	--:SelectTargets|
+		--ISelect your next ; target|t;Victim[$i.Raw];Next MultiAttack Target
+		--=i|[$i] + 1
+		--?[$i] -eq [$NumberOfTargets]|TargetsDone|SelectTargets
+		--:TargetsDone|
+	--=k|1
+	--#emoteText|[*S:character_name] attacks the area with their [&AttackPower] attack!
+	--:ResolveAttacks|
+		--#targetToken|[Victim[$k.Raw]]
+		--:CheckMultipleRange|
+			--IWhat is the target's ; range?|q;RangeValue;What is the range for [*T:character_name]?|Close,0|Medium,2|Long,5
+			--=RangePenalty|[&RangeValue]
+		--=AttackRoll|1d20 [Base] + [*S:fighting] [FGT] + [$CombatSkill] [Skill] + [$CombatAdvantage] [Combat Advantage] - [$RangePenalty] [Range Penalty]
+		--=WhatToHit|10 + [*T:dodge]
+		--?[$AttackRoll.Base] -eq 1 -or [$AttackRoll] -lt [$WhatToHit]|Miss
+		--?[$AttackRoll.Base] -eq 20 -and [$AttackRoll] -ge [$WhatToHit]|Crit|Hit
+		--?[$AttackRoll.Base] -ge [$CritRange] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
+		--?[$AttackRoll] -ge [$WhatToHit]|Hit
+	--:MultiAttacksDone|
+	--X|
+	
+  --:CoveringAttack|
+	--IChoose an ; ally|t;CoverAlly;What ally not in close combat are you covering?
+	--#emoteState|hidden
+	--+Suppressing Fire!|[i][*[&CoverAlly]:character_name] has the benefits of cover against enemies in your line of sight and in range of your Multiattack this turn.[/i]
+	--X|
+	
+  --:ImperviousToThisAttack|
+	--+No Effect!|[i][*T:character_name] seems to be impervious to this attack.[/i]
+	--X|
+			
+  --:PowerError|
+	--+Error|Power could not be found. 
+	--X|
+}}

@@ -1,0 +1,180 @@
+!scriptcard {{ 
++++M&M3E+++
+--#sourceToken|@{selected|token_id}
+--#emoteState|hidden
+  --Lsettings|[*S:character_name]
+  --?[*S:op_npc] -eq on|>NPCSettings
+  --#title|[*S:character_name] - Powers
+  --#whisper|self
+  
+  --#buttonFontSize|small
+  --#buttonbackgroundimage|url(https://s3.amazonaws.com/files.d20.io/images/251405432/dtTqq0QYaqRESSiIfHpECA/original.png?16347675395); background-repeat: no-repeat; background-size:110px 32px; width:110px; height:24px; align:center; 
+  --#buttontextcolor|black
+
+  
+  --=i|1
+  --=j|1
+  --=k|0
+  --=m|1
+  --=PowerCount|0
+  --=ArrayCount|0
+
+  --&IndentCell|[img width=36 height=24 ]https://s3.amazonaws.com/files.d20.io/images/189949695/nW5EdvKGlKOUHA-9gCuY6g/original.png?16097206605[/img]
+  
+ 
+--:FindAttacks|
+	--Rfirst|[*S:character_id];repeating_powers
+	--?"[*R:label]" -inc Loaded|PowerError
+	
+--:Powers|
+	--?"[*R:label]" -inc Loaded|PowersDone
+	--?"[*R:description]" -inc Array|ArrayBuild
+	--=Power[$i.Raw]AltCount|0
+	--?"[*R:element_type]" -eq "power"|[
+		--=PowerCount|[$PowerCount] + 1
+		--&Power[$i.Raw]|[td style="width:100%;text-align:center;line-height:24px;font-weight: bold; padding: 5px"][sheetbutton:#000000:#FFFFFF][*R:label]::GenericMacro::NothingToSeeHere"class="showtip" title="[*R:description][/sheetbutton][/td]
+		--^GoToNextPower|
+		--]|
+	--?"[*R:element_type]" -eq "attack_fx" -and "[*R:attack_type]" -ne "alternative" -and "[*R:attack_type]" -ne "dynamic"|[
+		--=PowerCount|[$PowerCount] + 1
+		--~MacroName|string;replaceall; ;;[*R:label]
+		--&Power[$i.Raw]|[td style="width:100%;text-align:center;line-height:24px;font-weight: bold; padding: 5px"][sheetbutton:#000000:#FF0000][*R:label]::[*S:character_name]::[&MacroName]"class="showtip" title="[*R:description][/sheetbutton][/td]
+		--^GoToNextPower|
+		--]|
+	--?"[*R:element_type]" -eq "attack_fx" -and "[*R:attack_type]" -eq "dynamic"|[
+		--=PowerCount|[$PowerCount] + 1
+		--~MacroName|string;replaceall; ;;[*R:label]
+		--&Power[$i.Raw]|[td style="width:100%;text-align:center;line-height:24px;font-weight: bold; padding: 5px"][sheetbutton:#000000:#8C25B2][*R:label]::[*S:character_name]::[&MacroName]"class="showtip" title="[*R:description][/sheetbutton][/td]
+		--^GoToNextPower|
+		--]|
+	--:AltPower|
+		--?"[*R:element_type]" -eq "alt_power"|[
+			--=Power[$i.Raw]AltCount|[$Power[$i.Raw]AltCount] + 1
+			--&Power[$i.Raw]Alt[$j.Raw]|[td style="width:100%;text-align:center;line-height:24px;font-weight: bold; padding: 5px"][&IndentCell][sheetbutton:#000000:#3333CC][*R:label]::GenericMacro::NothingToSeeHere"class="showtip" title="[*R:description][/sheetbutton][/td]
+			--=j|[$j] + 1
+			--^GoToNextPower|
+			--]|
+		--?"[*R:element_type]" -eq "attack_fx" -and "[*R:attack_type]" -eq "alternative"|[
+			--=Power[$i.Raw]AltCount|[$Power[$i.Raw]AltCount] + 1
+			--~MacroName|string;replaceall; ;;[*R:label]
+			--&Power[$i.Raw]Alt[$j.Raw]|[td style="width:100%;text-align:center;line-height:24px;font-weight: bold; padding: 5px"][&IndentCell][sheetbutton:#000000:#FF0000][*R:label]::[*S:character_name]::[&MacroName]"class="showtip" title="[*R:description][/sheetbutton][/td]
+			--=j|[$j] + 1
+			--^GoToNextPower|
+			--]|
+	--:GoToNextPower|
+	--Rnext|
+	--?"[*R:element_type]" -eq "alt_power" -or "[*R:element_type]" -eq "alternative" -or "[*R:attack_type]" -eq "alternative"|AltPower
+	--=i|[$i] + 1
+	--=j|1
+	--?"[*R:label]" -inc Loaded|PowersDone
+	--^Powers| 
+	
+	
+--:ArrayBuild|
+	--?"X[*R:master_row]" -eq "X"|ArrayTitle
+	--?[*R:master_row] -nei [&ArrayID]|Powers		
+	--=Array[$k.Raw]PowerCount|[$Array[$k.Raw]PowerCount] + 1
+	--?"[*R:element_type]" -eq "alt_power" -and [*R:master_row] -eqi [&ArrayID]|[
+		--&Array[$k.Raw]Power[$m.Raw]|[td style="width:100%;text-align:center;line-height:24px;font-weight: bold; padding: 5px"][sheetbutton:#000000:#03FE22][*R:label]::GenericMacro::NothingToSeeHere"class="showtip" title="[*R:description][/sheetbutton][/td]
+		--]|
+	--?"[*R:element_type]" -eq "attack_fx" -and [*R:master_row] -eqi [&ArrayID]|[
+		--~MacroName|string;replaceall; ;;[*R:label]
+		--&Array[$k.Raw]Power[$m.Raw]|[td style="width:100%;text-align:center;line-height:24px;font-weight: bold; padding: 5px"][sheetbutton:#000000:#FF0000][*R:label]::[*S:character_name]::[&MacroName]"class="showtip" title="[*R:description][/sheetbutton][/td]
+		--]|
+	--Rnext|
+	--?"X[*R:element_type]" -eq "X" -or [*R:element_type] -inc Loaded -or [*R:element_type] -eq power|Powers
+	--=m|[$m] + 1
+	--^ArrayBuild|
+	
+--:ArrayTitle|
+	--=k|[$k] + 1
+	--=ArrayCount|[$ArrayCount] + 1
+	--=Array[$k.Raw]PowerCount|0
+	--&Array[$k.Raw]Heading|[tr][td style="line-height:24px;font-size:18px; font-weight:bold; font-style: oblique; color: blue; text-align:center"][*R:label][/td][/tr]
+	--~ArrayID|string;after;repeating_powers_;[*R>label]
+	--~ArrayID|string;before;_;[&ArrayID]
+	--Rnext|
+	--^ArrayBuild|
+	
+--:PowersDone|
+	--=i|0
+	--=j|0
+	--=k|1
+	--=RowCount|0
+	--:CellOutput|
+		--=i|[$i] + 1
+		--=j|[$j] + 1
+		--&Row[$i.Raw]|[tr][&Power[$j.Raw]][/tr]
+		--=RowCount|[$RowCount] + 1
+		--?[$Power[$j.Raw]AltCount] -eq 0|NoAlternatePower
+		--:CheckAlternatePowerEffect|
+			--=i|[$i] + 1
+			--&Row[$i.Raw]|[tr][&Power[$j.Raw]Alt[$k.Raw]][/tr]
+			--=RowCount|[$RowCount] + 1
+			--=k|[$k] + 1
+			--?[$k] -lt [$Power[$j.Raw]AltCount]|CheckAlternatePowerEffect
+		--:NoAlternatePower|
+			--=k|1
+			--?[$j] -lt [$PowerCount]|CellOutput|BeginArrayOutput
+
+--:BeginArrayOutput|
+	--?[$ArrayCount] -eq 0|PrintPowers
+	--=i|1
+	--=Array[$i.Raw]RowCount|0
+	--:ConstructArrayPowers|
+		--=j|0
+		--:ArrayCellOutput|
+			--=j|[$j] + 1
+			--=Array[$i.Raw]RowCount|[Array[$i.Raw]RowCount] + 1
+			--&Array[$i.Raw]Row[$j.Raw]|[&Array[$i.Raw]Power[$j.Raw]]
+			--?[$j] -lt [$Array[$i.Raw]PowerCount]|ArrayCellOutput
+			--?[$i] -eq [$ArrayCount]|PrintPowers
+			--=i|[$i] + 1
+			--=Array[$i.Raw]RowCount|0
+			--^ConstructArrayPowers|						
+
+--:PrintPowers|
+	--=i|1
+	--&TotalPowerOutput|[&Row[$i.Raw]]
+	--:AddRows|
+		--=i|[$i] + 1
+		--?[$i] -gt [$RowCount]|PrintArrayPowers
+		--&TotalPowerOutput|[&TotalPowerOutput][&Row[$i.Raw]]
+		--^AddRows|
+		
+--:PrintArrayPowers|
+	--?[$ArrayCount] -eq 0|GoToPrint
+	--=i|1
+	--=j|0
+	--&TotalArray[$i.Raw]Output|[&Array[$i.Raw]Heading]
+	--:AddArrayRows|
+		--=j|[$j] + 1
+		--&TotalArray[$i.Raw]Output|[&TotalArray[$i.Raw]Output][tr][&Array[$i.Raw]Row[$j.Raw]][/tr]
+		--?[$j] -eq [$Array[$i.Raw]PowerCount]|CheckAdditionalArrays
+		--^AddArrayRows|
+	--:CheckAdditionalArrays|
+		--?[$i] -eq [$ArrayCount]|GoToPrint
+		--=i|[$i] + 1
+		--&TotalArray[$i.Raw]Output|[&Array[$i.Raw]Heading]
+		--=j|0
+		--^AddArrayRows|
+		
+		
+--:GoToPrint|
+	--=i|1
+	--+|[c][t style="width:100%; border-spacing: 1em .5em"][&TotalPowerOutput][/t][/c]
+	--?[$ArrayCount] -eq 0|Done
+	--+|[c][t style="width:100%; border-spacing: 1em .5em"][&TotalArray[$i.Raw]Output][/t][/c]
+	--:ArrayOutputLoop|
+		--=i|[$i] + 1
+		--?[$i] -gt [$ArrayCount]|Done
+		--+|[c][t style="width:100%; border-spacing: 1em .5em"][&TotalArray[$i.Raw]Output][/t][/c]
+		--^ArrayOutputLoop|
+
+--:Done|
+--X|
+
+--:PowerError|
+	--+Error|No Power Loaded.
+	--X|
+}}

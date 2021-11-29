@@ -1,0 +1,21 @@
+!scriptcard {{
++++M&M3E+++
+--#emoteState|hidden
+--#sourceToken|CharacterID
+--&SaveName|NameofSave 
+--Lsettings|[*S:character_name]
+--?[*S:op_npc] -eq on|>NPCSettings
+--#title|[*S:t-name] - [&SaveName] Check
+
+--:SavingThrow|
+--=SaveRoll|1d20 [Base] + [*S:[&SaveName]] [Save]
+--+|[*S:t-name] rolls a [$SaveRoll] for their [&SaveName] defense check.
+--X|
+
+--:NPCSettings|
+	--Lsettings|npcsettings
+	--#whisper|GM
+	--<|
+
+
+}}

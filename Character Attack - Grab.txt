@@ -1,0 +1,96 @@
+!scriptcard {{ 
++++M&M3E+++
+--#sourceToken|@{selected|token_id}
+--#targetToken|@{target|token_id}
+
+  --Lsettings|[*S:character_name]
+  --?[*S:op_npc] -eq on|>NPCSettings
+  --#title|[*S:character_name] - Grab
+  
+  --Rfind|[*S:character_id];Unarmed;repeating_closecombat;specialty
+  --?"[*R:specialty]" -inc Loaded|[
+		--=CombatSkill|0
+		--=SkillRank|0
+		--]|[
+		--=CombatSkill|[*R:attribute] + [*R:specialty_rank]
+		--=SkillRank|[*R:specialty_rank]
+		--]|
+  --=AttackRoll|1d20 [Base] + [*S:fighting] [FGT] + [$CombatSkill] [Skill]
+  --=WhatToHit|10 + [*T:parry]
+  
+  --~HigherResistance|math;max;[*T:dodge];[*T:strength]
+  --=[*T:dodge] -eq [*T:strength]|=HigherResistance;[*T:strength]
+  --=ResistanceCheck|1d20 [Base] + [$HigherResistance] [Resistance]
+  
+  --~HigherDC|math;max;[*S:strength];[$SkillRank]
+  --?[*S:strength] -eq [$SkillRank]|=HigherDC;[$SkillRank]
+  --=ResistanceDC|10 + [$HigherDC]
+
+  --FindAnyImpCrit|Character ID;Section Name;Attack Name
+	--Rfirst|[*S:character_id];repeating_advantages
+	--:ImpCritLoop|
+		--?"[*R:name]" -inc Loaded|LoopDone
+		--?"[*R:name]" -inc "Improved Critical" -and "[*R:name]" -inc "Grab"|HowMuchImpCrit
+		--Rnext|
+		--^ImpCritLoop|
+	--:HowMuchImpCrit|
+		--~Before|string;before;:;[*R:name]
+		--~After|string;after;critical ;[&Before]
+		--=ImpCritValue|[&After]
+		--=CritRange|20 - [$ImpCritValue]
+	--:LoopDone|
+	--<|
+  
+  --:FindAttackAdvantage|Character ID;Attack Name
+	--Rfirst|[*S:character_id];repeating_advantages
+	--:CloseAttackLoop|
+		--?"[*R:name]" -inc Loaded|AttackLoopDone
+		--?"[*R:name]" -inc "Close Attack"|HowMuchCloseAttack
+		--Rnext|
+		--^CloseAttackLoop|
+	--:HowMuchCloseAttack|
+		--=AttackRoll|1d20 [Base] + [*S:fighting] [FGT] + [$CombatSkill] [Skill] + [*R:rank] [Combat Advantage]
+	--:AttackLoopDone|
+	
+  --+Get over here|[*S:character_name] rolls a [$AttackRoll] to attempt to grab and restrain [*T:character_name].
+  
+  --:HitDetermination|
+	--?[$AttackRoll.Base] -eq 1 -or [$AttackRoll] -lt [$WhatToHit]|Miss
+	--?[$AttackRoll.Base] -eq 20 -and [$AttackRoll] -ge [$WhatToHit]|Crit|Hit
+	--?[$AttackRoll.Base] -ge [$CritRange] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
+	--?[$AttackRoll] -ge [$WhatToHit]|Hit
+	
+	--:Miss|
+		--+Miss|[i][*T:character_name] avoids the the grab attempt![/i]
+		--X|
+		
+	--:Crit|
+		--IWhat ; additional effect?|q;AddEffect;Choose your additional critical effect|Increased Effect|Added Effect|Alternate Effect
+		--?"[&AddEffect]" -eq "Increased Effect"|=ResistanceCheck;[$ResistanceCheck] - 5
+		--=Difference|[$ResistanceDC] - [$ResistanceCheck]  
+		--?[$Difference] -lt 1|Resisted
+		--=DegreeSuccess|[$Difference] \ 5 + 1
+		--?[$DegreeSuccess] -eq 1|&SucccessResult;restrained (immobile and vulnerable)|&SucccessResult;bound (defenseless, immobile, and impaired)
+		--+Grabbed!| [i][*T:character_name] is [&SucccessResult]. You may use a free action next turn to maintain the grab and a standard action to inflict your Strength damage.[/i]
+		--?"[&AddEffect]" -eq "Added Effect" -or "[&AddEffect]" -eq "Alternate Effect"|[
+			--+Choose|[i] your [&AddEffect] for this critical hit. [/i]
+			--]
+		--X|
+  
+	--:Hit|
+		--=Difference|[$ResistanceDC] - [$ResistanceCheck]  
+		--?[$Difference] -lt 1|Resisted
+		--=DegreeSuccess|[$Difference] \ 5 + 1
+		--?[$DegreeSuccess] -eq 1|&SucccessResult;restrained (immobile and vulnerable)|&SucccessResult;bound (defenseless, immobile, and impaired)
+		--+Grabbed!| [i][*T:character_name] is [&SucccessResult]. You may use a free action next turn to maintain the grab and a standard action to inflict your Strength damage.[/i]
+		--X|
+		
+	--:Resisted|
+		--+Resisted!| [i][*T:character_name] has resisted your grab attempt.[/i]
+		--X|
+	
+  --:NPCSettings|
+	--Lsettings|npcsettings
+	--#whisper|GM
+	--<|
+}}

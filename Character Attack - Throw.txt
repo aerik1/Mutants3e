@@ -1,0 +1,105 @@
+!scriptcard {{ 
++++M&M3E+++
+--#sourceToken|@{selected|token_id}
+--#targetToken|@{target|token_id}
+
+  --Lsettings|[*S:character_name]
+  --?[*S:op_npc] -eq on|>NPCSettings
+  --#title|[*S:character_name] - Thrown Object
+  
+  --Rfind|[*S:character_id];Throw;repeating_rangedcombat;specialty
+  --?"[*R:specialty]" -inc Loaded|[
+		--=CombatSkill|0
+		--=SkillRank|0
+		--]|[
+		--=CombatSkill|[*R:specialty_rank]
+		--=SkillRank|[*R:specialty_rank]
+		--]|
+		
+  --=AttackRoll|1d20 [Base] + [*S:dexterity] [DEX] + [$CombatSkill] [Skill]
+  --=WhatToHit|10 + [*T:dodge]
+  --=ResistanceDC|15 + [*T:strength]
+  --=ResistanceCheck|1d20 + [*T:toughness]
+  --=CritRange|20
+  
+  --:FindAnyImpCrit|Character ID;Attack Name
+	--Rfirst|[*S:character_id];repeating_advantages
+	--:ImpCritLoop|
+		--?"[*R:name]" -inc Loaded|LoopDone
+		--?"[*R:name]" -inc "Improved Critical" -and "[*R:name]" -inc "Throw"|HowMuchImpCrit
+		--Rnext|
+		--^ImpCritLoop|
+	--:HowMuchImpCrit|
+		--~Before|string;before;:;[*R:name]
+		--~After|string;after;critical ;[&Before]
+		--=ImpCritValue|[&After]
+		--=CritRange|20 - [$ImpCritValue]
+	--:LoopDone|
+
+  --:FindAttackAdvantage|Character ID;Attack Name
+	--Rfirst|[*S:character_id];repeating_advantages
+	--:RangedAttackLoop|
+		--?"[*R:name]" -inc Loaded|RangedAttackLoopDone
+		--?"[*R:name]" -inc "Ranged Attack"|HowMuchRangedAttack
+		--Rnext|
+		--^RangedAttackLoop|
+	--:HowMuchRangedAttack|
+		--=AttackRoll|1d20 [Base] + [*S:dexterity] [DEX] + [$CombatSkill] [Skill] + [*R:rank] [Combat Advantage]
+	--:RangedAttackLoopDone|
+	
+  --+Catch!|[*S:character_name] rolls a [$AttackRoll] to throw an object at [*T:character_name].
+  
+  --:HitDetermination|
+	--?[$AttackRoll.Base] -eq 1 -or [$AttackRoll] -lt [$WhatToHit]|Miss
+	--?[$AttackRoll.Base] -eq 20 -and [$AttackRoll] -ge [$WhatToHit]|Crit|Hit
+	--?[$AttackRoll.Base] -ge [$CritRange] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
+	--?[$AttackRoll] -ge [$WhatToHit]|Hit
+	
+	--:Miss|
+		--+Miss|[i][*T:character_name] avoids the thrown object![/i]
+		--X|
+		
+	--:Crit|
+		--IWhat ; additional effect?|q;AddEffect;Choose your additional critical effect|Increased Effect|Added Effect|Alternate Effect
+		--?"[&AddEffect]" -eq "Increased Effect"|=ResistanceCheck;[$ResistanceCheck] - 5
+		--=Difference|[$ResistanceDC] - [$ResistanceCheck]  
+		--?[$Difference] -lt 1|Resisted
+		--=DegreeSuccess|[$Difference] \ 5 + 1
+		-->DamageDegreeResult|
+		--+Critical Hit!| [i] Choose your [&AddEffect] for this critical hit. [/i]
+		--X|
+  
+	--:Hit|
+		--=Difference|[$ResistanceDC] - [$ResistanceCheck]  
+		--?[$Difference] -lt 1|Resisted
+		--=DegreeSuccess|[$Difference] \ 5 + 1
+		-->DamageDegreeResult|
+		--X|
+		
+	--:Resisted|
+		--+Resisted!| [i][*T:character_name] has resisted any damage from the thrown object.[/i]
+		--X|
+		
+	--:DamageDegreeResult|
+		--?[$DegreeSuccess] -eq 1|[
+			--+Failed|[i][*T:character_name] takes a –1 circumstance penalty to further resistance checks against damage.[/i]
+			--@modbattr|_silent _charid [*T:character_id] _injuries|+1
+			--]|
+		--?[$DegreeSuccess] -eq 2|[
+			--+Failed|[i][*T:character_name] takes a –1 circumstance penalty to further resistance checks against damage and is [b]dazed[/b] until the start of their next turn.[/i]
+			--@modbattr|_silent _charid [*T:character_id] _injuries|+1
+			--@setattr|_silent _charid [*T:character_id] _dazed|on
+			--]|
+		--?[$DegreeSuccess] -eq 3|[
+			--?[*T:staggered] -eq on|FourthDegree
+			--+Failed|[i][*T:character_name] takes a –1 circumstance penalty to further resistance checks against damage and is [b]staggered[/b] until they recover.[/i]
+			--@modbattr|_silent _charid [*T:character_id] _injuries|+1
+			--@setattr|_silent _charid [*T:character_id] _staggered|on
+			--]|
+		--:FourthDegree|
+		--?[$DegreeSuccess] -ge 4|[
+			--+Out!|[i][*T:character_name] has been incapacitated![/i]
+			--@setattr|_silent _charid [*T:character_id] _incapacitated|on
+			--]|
+			--<|
+}}

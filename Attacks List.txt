@@ -1,0 +1,26 @@
+!scriptcard {{ 
++++M&M3E+++
+--#sourceToken|@{selected|token_id}
+--#emoteState|hidden
+  --Lsettings|[*S:character_name]
+  --?[*S:op_npc] -eq on|>NPCSettings
+  --#title|[*S:character_name] - Attacks
+  --#whisper|self
+
+  --:FindAttacks|
+	  --Rfirst|[*S:character_id];repeating_attacks
+  
+  --:Attacks|
+	--?"[*R:attack_name]" -inc Loaded|Output
+	--&MacroName|[*R:attack_name]
+	--?"[*R:attack_name] -inc " "|[
+		--~MacroName|string;replaceall; ;;[*R:attack_name]
+		--]|
+	--&Output|+ [button][*R:attack_name]::~[*S:character_name]|[&MacroName][/button] 
+	--Rnext|
+  --^Attacks|
+
+  --:Output|
+	--+|[c][&Output][/c]
+  --X|
+}}

@@ -1,0 +1,20 @@
+!scriptcard {{
++++M&M3E+++
+--#whisper|self
+--#emoteState|hidden
+  --#sourceToken|@{selected|token_id}
+--Lsettings|[*S:character_name]
+--?[*S:sheet_type] -eq npc|>NPCSettings
+--#title|[*S:t-name] - Defense Check
+--#leftsub|Which check?
+
+--:Output|
+--+|[c][button]Fortitude::!ia _chat#GenericMacro|DefenseRoll _CharacterID#@{selected|token_id} _NameofSave#Fortitude[/button] [button]Toughness::!ia _chat#GenericMacro|DefenseRoll _CharacterID#@{selected|token_id} _NameofSave#Toughness[/button] [button]Will::!ia _chat#GenericMacro|DefenseRoll _CharacterID#@{selected|token_id} _NameofSave#Will[/button][/c]
+--X|
+
+--:NPCSettings|
+	--Lsettings|npcsettings
+	--#whisper|GM
+	--<|
+
+}}

@@ -1,0 +1,15 @@
+!scriptcard {{ 
++++M&M3E++
+--#sourceToken|@{selected|token_id}
+  --#emoteState|hidden
+  --#whisper|self
+
+  --Lsettings|[*S:character_name]
+  --&AbilityName|?{Which Attribute?|Strength|Stamina|Agility|Dexterity|Fighting|Intellect|Awareness}
+  --#title|[*S:character_name] - [&AbilityName] Check
+  --#leftsub|Current [&AbilityName] score - [*S:[&AbilityName]]
+  --=AttrRoll|1d20 [Base] + [*S:[&AbilityName]] [&AbilityName]
+  
+  --+Rolling|[*S:character_name] rolls a [$AttrRoll] for their [&AbilityName] check.
+  
+}}

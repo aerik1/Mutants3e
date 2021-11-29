@@ -1,0 +1,52 @@
+!scriptcard {{
++++M&M3E+++
+--#emoteState|hidden
+--#sourceToken|CharacterID
+--Lsettings|[*S:character_name]
+--?[*S:sheet_type] -eq npc|>NPCSettings
+--&SkillName|NameofSkill
+--#title|[*S:t-name] - [&SkillName] Check
+--#leftsub|Skill Check
+
+--?"[&SkillName]" -inc Expertise|ExpertiseRoll
+--?"[&SkillName]" -inc "Close Combat"|CloseCombatRoll
+--?"[&SkillName]" -inc "Ranged Combat"|RangedCombatRoll
+--?"[&SkillName]" -inc "Sleight of Hand"|SleightRoll
+
+  --=Roll|1d20 [Base] + [*S:[&SkillName]] [Modifier]
+  --+|[c][i][b][*S:t-name][/b] rolls a [b][&SkillName][/b] check of [$Roll]. [/i][/c]
+  --X|
+  
+  --:ExpertiseRoll|
+	  --~Expertise|string;after;: ;[&SkillName]
+	  --Rfind|[*S:character_id];[&Expertise];repeating_expertise;expertise_name
+	  --=Roll|1d20 [Base] + [*R:expertise] [Modifier]
+	  --+|[c][i][b][*S:t-name][/b] rolls a [b][&SkillName][/b] check of [$Roll]. [/i][/c] 
+	  --X|
+
+  --:CloseCombatRoll|
+	  --~CloseCombat|string;after;: ;[&SkillName]
+	  --Rfind|[*S:character_id];[&CloseCombat];repeating_closecombat;specialty
+	  --=RollMod|[*R:specialty_rank] + [*R:specialty_mod] + [*R:attribute]
+	  --=Roll|1d20 [Base] + [$RollMod] [Modifier]
+	  --+|[c][i][b][*S:t-name][/b] rolls a [b][&SkillName][/b] check of [$Roll]. [/i][/c] 
+	  --X|
+	  
+  --:RangedCombatRoll|
+	  --~RangedCombat|string;after;: ;[&SkillName]
+	  --Rfind|[*S:character_id];[&CloseCombat];repeating_rangedcombat;specialty
+	  --=RollMod|[*R:specialty_rank] + [*R:specialty_mod] + [*R:attribute]
+	  --=Roll|1d20 [Base] + [$RollMod] [Modifier]
+	  --+|[c][i][b][*S:t-name][/b] rolls a [b][&SkillName][/b] check of [$Roll]. [/i][/c] 
+	  --X|
+	  
+  --:SleightRoll|
+	--=Roll|1d20 [Base] + [*S:sleightofhand] [Modifier]
+	  --+|[c][i][b][*S:t-name][/b] rolls a [b][&SkillName][/b] check of [$Roll]. [/i][/c] 
+	  --X|
+
+--:NPCSettings|
+--Lsettings|npcsettings
+--#whisper|GM
+--<|
+}}

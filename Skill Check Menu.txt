@@ -1,0 +1,66 @@
+!scriptcard {{
++++M&M3E+++
+--#whisper|self
+--#emoteState|hidden
+--#sourceToken|@{selected|token_id}
+--Lsettings|[*S:character_name]
+--#title|[*S:t-name] Skill Check
+--#leftsub|Which skill?
+  
+--~|array;define;SkillNames;Acrobatics;Athletics;Close Combat;Deception;Expertise;Insight;Intimidation;Investigation;Perception;Persuasion;Ranged Combat;Sleight of Hand;Stealth;Technology;Treatment;Vehicles
+  
+--~SkillName|array;getcurrent;SkillNames
+--:LoopSkillNames|
+	--?"[&SkillName]" -inc "Close Combat"|CheckCloseCombat
+	--?"[&SkillName]" -inc "Ranged Combat"|CheckRangedCombat
+	--?"[&SkillName]" -inc Expertise|CheckExpertise
+	--?"[*S:[&SkillName]_rank]" -eq 0|NoRanks
+	--?"[&SkillName]" -inc Sleight -and @{selected|Sleight of Hand_rank} -eq 0|NoRanks
+	--&Output|+ [button][&SkillName]::!ia _chat#GenericMacro|SkillCheck _CharacterID#@{selected|token_id} _NameofSkill#[&SkillName] [/button]
+	--:NoRanks|
+	--:RepeatingSectionDone|
+	--~SkillName|array;getnext;SkillNames
+	--?"[&SkillName]" -inc Error|>Output
+-->LoopSkillNames|
+
+--:CheckCloseCombat|
+--Rfirst|[*S:character_id];repeating_closecombat
+--?"[*R:specialty]" -inc Loaded|CloseCombatDone
+--:CloseCombatOutput|
+--&Output|+ [button]Close Combat: [*R:specialty]::!ia _chat#GenericMacro|SkillCheck _CharacterID#@{selected|token_id} _NameofSkill#Close Combat: [*R:specialty][/button]
+--Rnext|
+--?"[*R:specialty]" -ninc Loaded|CloseCombatOutput
+--:CloseCombatDone|
+--^RepeatingSectionDone|
+
+--:CheckRangedCombat|
+--Rfirst|[*S:character_id];repeating_rangedcombat
+--?"[*R:specialty]" -inc Loaded|RangedCombatDone
+--:RangedCombatOutput|
+--&Output|+ [button]Ranged Combat: [*R:specialty]::!ia _chat#GenericMacro|SkillCheck _CharacterID#@{selected|token_id} _NameofSkill#Ranged Combat: [*R:specialty][/button]
+--Rnext|
+--?"[*R:specialty]" -ninc Loaded|RangedCombatOutput
+--:RangedCombatDone|
+--^RepeatingSectionDone|
+
+--:CheckExpertise|
+--Rfirst|[*S:character_id];repeating_expertise
+--?"[*R:expertise_name]" -inc Loaded|ExpertiseDone
+--:ExpertiseOutput|
+--&Output|+ [button]Expertise: [*R:expertise_name]::!ia _chat#GenericMacro|SkillCheck _CharacterID#@{selected|token_id} _NameofSkill#Expertise: [*R:expertise_name][/button]
+--Rnext|
+--?"[*R:expertise_name]" -ninc Loaded|ExpertiseOutput
+--:ExpertiseDone|
+--^RepeatingSectionDone|
+
+
+--:Output|
+--+|[c][&Output][/c]
+--X|
+
+
+--:NPCSettings|
+--Lsettings|npcsettings
+--#whisper|GM
+--<|
+}}

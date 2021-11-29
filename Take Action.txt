@@ -1,0 +1,20 @@
+!scriptcard {{ 
++++M&M3E++
+--#sourceToken|@{selected|token_id}
+  --#emoteState|hidden
+  --#whisper|self
+  --#buttonFontSize|small
+
+  --Lsettings|[*S:character_name]
+  --#title|[*S:character_name] Actions
+  --#leftsub|What do you want to do?
+  --+|[c] [button]Attribute Check::~GenericMacro|AbilityCheck[/button] 
+  [button]Combat Maneuver::~GenericMacro|CombatManeuver[/button] 
+  [button]Dice Roller::~GenericMacro|DiceRoller[/button] 
+  [button]Make An Attack::~GenericMacro|PCAttackList[/button]
+  [button]Resistance Check::~GenericMacro|RollSave[/button] 
+  [button]Skill Check::~GenericMacro|SkillCheckMenu[/button] 
+  [button]Use A Power::~GenericMacro|PowerList[/button] [/c]
+
+  --X|  
+}}
