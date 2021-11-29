@@ -25,21 +25,6 @@
   --~HigherDC|math;max;[*S:strength];[$SkillRank]
   --?[*S:strength] -eq [$SkillRank]|=HigherDC;[$SkillRank]
   --=ResistanceDC|10 + [$HigherDC]
-
-  --FindAnyImpCrit|Character ID;Section Name;Attack Name
-	--Rfirst|[*S:character_id];repeating_advantages
-	--:ImpCritLoop|
-		--?"[*R:name]" -inc Loaded|LoopDone
-		--?"[*R:name]" -inc "Improved Critical" -and "[*R:name]" -inc "Grab"|HowMuchImpCrit
-		--Rnext|
-		--^ImpCritLoop|
-	--:HowMuchImpCrit|
-		--~Before|string;before;:;[*R:name]
-		--~After|string;after;critical ;[&Before]
-		--=ImpCritValue|[&After]
-		--=CritRange|20 - [$ImpCritValue]
-	--:LoopDone|
-	--<|
   
   --:FindAttackAdvantage|Character ID;Attack Name
 	--Rfirst|[*S:character_id];repeating_advantages
@@ -55,9 +40,10 @@
   --+Get over here|[*S:character_name] rolls a [$AttackRoll] to attempt to grab and restrain [*T:character_name].
   
   --:HitDetermination|
+	--Rfind|[*S:character_id];Grab;repeating_attacks;attack_name
 	--?[$AttackRoll.Base] -eq 1 -or [$AttackRoll] -lt [$WhatToHit]|Miss
 	--?[$AttackRoll.Base] -eq 20 -and [$AttackRoll] -ge [$WhatToHit]|Crit|Hit
-	--?[$AttackRoll.Base] -ge [$CritRange] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
+	--?[$AttackRoll.Base] -ge [*R:attack_crit] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
 	--?[$AttackRoll] -ge [$WhatToHit]|Hit
 	
 	--:Miss|

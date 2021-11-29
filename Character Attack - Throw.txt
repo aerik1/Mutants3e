@@ -20,21 +20,6 @@
   --=WhatToHit|10 + [*T:dodge]
   --=ResistanceDC|15 + [*T:strength]
   --=ResistanceCheck|1d20 + [*T:toughness]
-  --=CritRange|20
-  
-  --:FindAnyImpCrit|Character ID;Attack Name
-	--Rfirst|[*S:character_id];repeating_advantages
-	--:ImpCritLoop|
-		--?"[*R:name]" -inc Loaded|LoopDone
-		--?"[*R:name]" -inc "Improved Critical" -and "[*R:name]" -inc "Throw"|HowMuchImpCrit
-		--Rnext|
-		--^ImpCritLoop|
-	--:HowMuchImpCrit|
-		--~Before|string;before;:;[*R:name]
-		--~After|string;after;critical ;[&Before]
-		--=ImpCritValue|[&After]
-		--=CritRange|20 - [$ImpCritValue]
-	--:LoopDone|
 
   --:FindAttackAdvantage|Character ID;Attack Name
 	--Rfirst|[*S:character_id];repeating_advantages
@@ -50,9 +35,10 @@
   --+Catch!|[*S:character_name] rolls a [$AttackRoll] to throw an object at [*T:character_name].
   
   --:HitDetermination|
+	--Rfind|[*S:character_id];Throw;repeating_attacks;attack_name
 	--?[$AttackRoll.Base] -eq 1 -or [$AttackRoll] -lt [$WhatToHit]|Miss
 	--?[$AttackRoll.Base] -eq 20 -and [$AttackRoll] -ge [$WhatToHit]|Crit|Hit
-	--?[$AttackRoll.Base] -ge [$CritRange] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
+	--?[$AttackRoll.Base] -ge [*R:attack_crit] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
 	--?[$AttackRoll] -ge [$WhatToHit]|Hit
 	
 	--:Miss|

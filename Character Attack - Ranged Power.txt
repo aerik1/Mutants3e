@@ -18,21 +18,6 @@
 		--=CombatSkill|[*R:specialty_rank]
 		--=SkillRank|[*R:specialty_rank]
 		--]|
-		
-  --:FindImprovedCrit|Character ID;Attack Name
-    --=CritRange|20
-	--Rfirst|[*S:character_id];repeating_advantages
-	--:ImpCritLoop|
-		--?"[*R:name]" -inc Loaded|LoopDone
-		--?"[*R:name]" -inc "Improved Critical" -and "[*R:name]" -inc "[&AttackPower]"|HowMuchImpCrit
-		--Rnext|
-		--^ImpCritLoop|
-	--:HowMuchImpCrit|
-		--~Before|string;before;:;[*R:name]
-		--~After|string;after;critical ;[&Before]
-		--=ImpCritValue|[&After]
-		--=CritRange|20 - [$ImpCritValue]
-	--:LoopDone|
 
   --:FindAttackRank|
 	--Rfind|[*S:character_id];(P,R) [&AttackPower];repeating_attacks;attack_name
@@ -146,7 +131,7 @@
 	--?[$AttackRoll.Base] -eq 1 -or [$AttackRoll] -lt [$WhatToHit]|Miss
 	--?[$AttackRoll.Base] -eq 20 -and [$AttackRoll] -ge [$WhatToHit]|Crit|Hit
 	--?[$AttackRoll.Base] -ge [$CritRange] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
-	--?[$AttackRoll] -ge [$WhatToHit]|Hit
+	--?[$AttackRoll] -ge [*R:crit]|Hit
 	
 	--:Miss|
 		--+Miss|[i][*T:character_name] avoids the [*R:label]![/i]

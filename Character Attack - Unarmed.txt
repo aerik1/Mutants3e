@@ -5,9 +5,9 @@
 
   --Lsettings|[*S:character_name]
   --?[*S:op_npc] -eq on|>NPCSettings
-  --#title|[*S:character_name] - Sword
+  --#title|[*S:character_name] - Unarmed Attack
   
-  --Rfind|[*S:character_id];Swords;repeating_closecombat;specialty
+  --Rfind|[*S:character_id];Unarmed;repeating_closecombat;specialty
   --?"[*R:specialty]" -inc Loaded|[
 		--=CombatSkill|0
 		--=SkillRank|0
@@ -16,20 +16,6 @@
 		--=SkillRank|[*R:specialty_rank]
 		--]|
   --=AttackRoll|1d20 [Base] + [*S:fighting] [FGT] + [$CombatSkill] [Skill]
-  
-  --:FindAnyImpCrit|Character ID;Attack Name
-	--Rfirst|[*S:character_id];repeating_advantages
-	--:ImpCritLoop|
-		--?"[*R:name]" -inc Loaded|CritLoopDone
-		--?"[*R:name]" -inc "Improved Critical" -and "[*R:name]" -inc "Sword"|HowMuchImpCrit
-		--Rnext|
-		--^ImpCritLoop|
-	--:HowMuchImpCrit|
-		--~Before|string;before;:;[*R:name]
-		--~After|string;after;critical ;[&Before]
-		--=ImpCritValue|[&After]
-		--=CritRange|20 - [$ImpCritValue]
-	--:CritLoopDone|
 	
   --:FindAttackAdvantage|Character ID;Advantage Name
 	--Rfind|[*S:character_id];Close Attack;repeating_advantages;name
@@ -43,9 +29,10 @@
   --=ResistanceCheck|1d20 + [*T:toughness]
   
   --:HitDetermination|
+	--Rfind|[*S:character_id];Unarmed;repeating_attacks;attack_name
 	--?[$AttackRoll.Base] -eq 1 -or [$AttackRoll] -lt [$WhatToHit]|Miss
 	--?[$AttackRoll.Base] -eq 20 -and [$AttackRoll] -ge [$WhatToHit]|Crit|Hit
-	--?[$AttackRoll.Base] -ge [$CritRange] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
+	--?[$AttackRoll.Base] -ge [*R:attack_crit] -and [$AttackRoll] -ge [$WhatToHit]|Crit|Miss
 	--?[$AttackRoll] -ge [$WhatToHit]|Hit
 	
 	--:Miss|
